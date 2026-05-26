@@ -109,7 +109,7 @@ def draw_algorithm_tooltip(surf, F, hovered, ALGORITHMS, CYAN, SCREEN_W, SCREEN_
 
 
 
-#-----------------------------------Task 3: Mini scoreboard for HUD----------------------------------------
+#--------------------------------------Task 3: Mini scoreboard for HUD------------------------------------------
 
 def draw_mini_scoreboard(surf, F, t1, t2, SCREEN_W, SCREEN_H,
                          THIEF_ORA, THIEF2_COL, GOLD):
@@ -142,3 +142,31 @@ def draw_mini_scoreboard(surf, F, t1, t2, SCREEN_W, SCREEN_H,
         F["sml"].render(leader, True, lead_col),
         (SCREEN_W // 2 - 60, SCREEN_H - 24)
     )
+
+
+#-----------------------------------Task 4: MVP officer display for game over screen-------------------------------------
+
+def draw_mvp_officer(surf, F, police_list, POLICE_BADGE_COLS, BX, BY, BH):
+    # Check if there is at least one police officer in the game
+    if police_list:
+
+        # Find the officer with the highest number of captures
+        mvp = max(police_list, key=lambda p: p.captures)
+
+        # Show MVP only if the officer has at least one capture
+        if mvp.captures > 0:
+
+            # Select badge color based on officer index
+            bc = POLICE_BADGE_COLS[mvp.index % len(POLICE_BADGE_COLS)]
+
+            # Prepare MVP message with officer number, algorithm, and captures
+            mvp_text = (
+                f"MVP: Officer {mvp.index + 1} ({mvp.algorithm})"
+                f" - {mvp.captures} capture(s)"
+            )
+
+            # Draw MVP information near the bottom of game over panel
+            surf.blit(
+                F["med"].render(mvp_text, True, bc),
+                (BX + 30, BY + BH - 90)
+            )
