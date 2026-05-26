@@ -1,8 +1,8 @@
 import math
 import random
+#-------------------------------------- PART_1: Algorithm: Simulated Annealing------------------------------------------
 
-# Algorithm: Simulated Annealing
-
+#Section: SA pathfinding with detailed explanation
 def sa_path(grid, start, goal):
     # Current position initially starts from the starting cell
     cur = start
@@ -70,3 +70,38 @@ def sa_path(grid, start, goal):
 
     # Return the reliable A* fallback path and total expanded count
     return fallback, expanded + fe
+
+
+# --------------------------------Task 2: Algorithm tooltips for draw_menu function--------------------------------------
+
+# This dictionary explains each algorithm shortly for the menu tooltip.
+# When the user hovers over an algorithm button, the matching text is shown.
+ALGO_TIPS = {
+    "BFS": "Shortest hops, ignores terrain cost",
+    "Dijkstra": "Cheapest real cost, terrain-aware",
+    "A*": "Cost plus heuristic, optimal and fast",
+    "Greedy": "Beelines to goal, not optimal",
+    "Hill Climbing": "Local search, can get stuck",
+    "Sim. Annealing": "Probabilistic, explores diversely",
+    "Adv A*": "Dijkstra-enriched heuristic, best paths",
+}
+
+
+def draw_algorithm_tooltip(surf, F, hovered, ALGORITHMS, CYAN, SCREEN_W, SCREEN_H):
+    # Check whether the hovered item is an algorithm button
+    if isinstance(hovered, tuple) and hovered[0] == "palgo":
+
+        # Extract algorithm index from hovered value
+        ai = hovered[1] % 10
+
+        # Make sure the index is inside the algorithm list
+        if ai < len(ALGORITHMS):
+
+            # Get tooltip text for the selected algorithm
+            tip = ALGO_TIPS.get(ALGORITHMS[ai], "")
+
+            # Draw the tooltip text at the bottom center of the menu screen
+            surf.blit(
+                F["sml"].render(tip, True, CYAN),
+                (SCREEN_W // 2 - 200, SCREEN_H - 36)
+            )
