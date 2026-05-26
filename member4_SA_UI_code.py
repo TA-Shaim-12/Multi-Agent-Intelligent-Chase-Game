@@ -170,3 +170,52 @@ def draw_mvp_officer(surf, F, police_list, POLICE_BADGE_COLS, BX, BY, BH):
                 F["med"].render(mvp_text, True, bc),
                 (BX + 30, BY + BH - 90)
             )
+
+
+# ---------------------------Task 5: Save and load custom map for MapEditor-------------------------------------
+
+def save_map_editor_data(editor, fname="custom_map.json"):
+    # Import json to convert map data into JSON format
+    import json
+
+    # Import pathlib to write file easily using Path
+    import pathlib
+
+    # Prepare map data with grid and collectibles
+    # Tuple keys are converted into string because JSON cannot store tuple keys directly
+    data = {
+        "grid": editor.grid,
+        "colls": {
+            str(k): v
+            for k, v in editor.collectibles.items()
+        }
+    }
+
+    # Save the map data into a JSON file
+    pathlib.Path(fname).write_text(json.dumps(data))
+
+
+def load_map_editor_data(editor, fname="custom_map.json"):
+    # Import json to read saved JSON map data
+    import json
+
+    # Import pathlib to check and read file path
+    import pathlib
+
+    # Create path object for the saved map file
+    p = pathlib.Path(fname)
+
+    # Load map only if the file exists
+    if p.exists():
+
+        # Read JSON data from file
+        d = json.loads(p.read_text())
+
+        # Restore saved grid data
+        editor.grid = d["grid"]
+
+        # Convert string keys back into tuple keys for collectibles
+        editor.collectibles = {
+            eval(k): v
+            for k, v in d["colls"].items()
+        }
