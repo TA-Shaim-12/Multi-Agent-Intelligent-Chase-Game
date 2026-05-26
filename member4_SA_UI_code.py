@@ -105,3 +105,40 @@ def draw_algorithm_tooltip(surf, F, hovered, ALGORITHMS, CYAN, SCREEN_W, SCREEN_
                 F["sml"].render(tip, True, CYAN),
                 (SCREEN_W // 2 - 200, SCREEN_H - 36)
             )
+
+
+
+
+#-----------------------------------Task 3: Mini scoreboard for HUD----------------------------------------
+
+def draw_mini_scoreboard(surf, F, t1, t2, SCREEN_W, SCREEN_H,
+                         THIEF_ORA, THIEF2_COL, GOLD):
+    # Compare Player 1 and Player 2 scores
+    # This section decides who is leading the match
+
+    if t1.score > t2.score:
+        # Player 1 is leading
+        leader = f"P1 leads +{t1.score - t2.score}"
+
+        # Use Player 1 thief color for the lead text
+        lead_col = THIEF_ORA
+
+    elif t2.score > t1.score:
+        # Player 2 is leading
+        leader = f"P2 leads +{t2.score - t1.score}"
+
+        # Use Player 2 thief color for the lead text
+        lead_col = THIEF2_COL
+
+    else:
+        # Both players have equal score
+        leader = "Tied!"
+
+        # Use gold color when the game is tied
+        lead_col = GOLD
+
+    # Draw the mini scoreboard at the bottom center of the screen
+    surf.blit(
+        F["sml"].render(leader, True, lead_col),
+        (SCREEN_W // 2 - 60, SCREEN_H - 24)
+    )
