@@ -6,5 +6,4 @@ def draw_sky(surf,weather,night=False): #SKY
     elif weather==SNOWY: top,bot=(160,190,220),(200,215,235)
     else: top,bot=SKY_TOP,SKY_BOT
 
-    # Height of sky area (upper part of screen)
-    sky_h=SCREEN_H//3
+    sky_h=SCREEN_H//3 #height of sky (upper part of the screen)
