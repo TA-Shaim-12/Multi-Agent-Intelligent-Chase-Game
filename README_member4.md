@@ -19,3 +19,14 @@ I added algorithm tooltips so users can understand each algorithm from the menu.
 
 ## Testing
 I checked that all code was saved in my own branch and committed task by task. Each feature was separated into meaningful commits to clearly show my individual contribution.
+
+## Member 4 Testing Checklist
+
+- Checked Simulated Annealing pathfinding explanation.
+- Checked detailed comments inside sa_path function.
+- Checked algorithm tooltip descriptions.
+- Checked mini scoreboard UI support.
+- Checked MVP officer display logic.
+- Checked save/load support for custom map editor.
+- Confirmed Member 4 files are included in the pull request.
+- Confirmed work is done from branch sa_0112320269.
