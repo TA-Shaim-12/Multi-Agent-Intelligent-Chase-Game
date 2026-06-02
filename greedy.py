@@ -23,3 +23,15 @@ def greedy_path(grid,start,goal):
                 cur=came[cur] #then moving backward to previous node
 
             return path[::-1],expanded #since the path was found by backtracking so the path is in reverse. Reversing it to get the accurate path before returning
+        for nb in _nb(grid,cur): #explores neighbour cells
+
+            if nb not in vis: #processes unvisited nodes only
+
+                vis.add(nb) #marks as visited
+                came[nb]=cur #stores current node as neighbour nodes parent
+                heapq.heappush(open_set,(_h(nb,goal),nb)) #(_h(nb,goal))means heuristic distance from the neighbor node to the goal
+                #adds neighbour into prio queue
+                #abs(row diff)+abs(col diff)
+                #it is the reason greedy is fast but may result poorly(since it uses heuristic cost, ignoring actual cost)
+
+    return [],expanded #if no path exists then return empty path and explored .
