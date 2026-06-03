@@ -77,11 +77,11 @@ class Game:
         self.t1 = None; self.t2 = None; self.police_list:List[Police] = [] # Initialize variables for timing and list of police agents.
         self.exit_pos = None; self.collectibles:Dict[Tuple,str] = {}; self.elapsed = 0.0 # Initialize variables for exit position, collectibles, and elapsed time.
 
-    def __init___sounds(self):
+    def __init___sounds(self):  # Load and initialize sound effects for the game.
         self.sounds = {}
         try:
-            sr = 44100
-            def tone(freq, dur, vol=0.3, wave='sine'):
+            sr = 44100 
+            def tone(freq, dur, vol=0.3, wave='sine'): # Generate a sound effect of a specific frequency, duration, volume, and waveform type.
                 n = int(sr*dur); arr = []
                 for i in range(n):
                     tv = i/sr
@@ -98,3 +98,54 @@ class Game:
         if s:
             try: s.play()
             except: pass
+
+
+ # Initialize the game state for a new play session based on the current selections and map configuration.
+    def start_game(self):
+        self.cols = (SCREEN_W-100)//TILE; self.rows = (SCREEN_H-100)//TILE 
+        self.ox = (SCREEN_W-self.cols*TILE)//2; self.oy = (SCREEN_H-self.rows*TILE)//2
+        custom_colls = {}
+        if self.sel["map"] == "Custom":  # If the selected map is "Custom", load the grid and collectibles from the map editor.
+            self.grid,self.variants,custom_colls = self.editor.get_grid_and_collectibles() # Retrieve the custom map defined in the map editor.
+        else: # generate the grid and variants based on the selected map name and dimensions.
+            self.grid,self.variants = generate_map(self.sel["map"],self.cols,self.rows)
+        empty = [(r,c) for r in range(1,self.rows-1) for c in range(1,self.cols-1) if self.grid[r][c]==EMPTY]
+        if len(empty)<4: # Ensure there are enough empty tiles to place the thieves and police agents.
+            self.grid,self.variants = generate_map("Forest Chase",self.cols,self.rows)
+            empty=[(r,c) for r in range(1,self.rows-1) for c in range(1,self.cols-1) if self.grid[r][c]==EMPTY]
+        random.shuffle(empty) 
+        t1pos=empty[0]; t2pos=empty[1] # Randomly select starting positions for the two thieves from the list of empty tiles on the grid.
+        self.t1=Thief(t1pos[0],t1pos[1],1); self.t2=Thief(t2pos[0],t2pos[1],2)
+
+        # Spawn police_list
+        num = self.sel["num_police"]; self.police_list = []; used={t1pos,t2pos} # tracking the police's spawned position
+        for pi in range(num): # Placing the police in the map while ensuring not to spawn close to the thieves or each other.
+            placed = False
+            for ep in empty[2:]: 
+                if ep not in used:
+                    too_close = any(_h(ep,(p.r,p.c))<6 for p in self.police_list)
+                    if not too_close:
+                        algo=self.police_algos[pi] if pi<len(self.police_algos) else ASTAR
+                        self.police_list.append(Police(ep[0],ep[1],algorithm=algo,index=pi))
+                        used.add(ep); placed = True; break
+            if not placed:
+                for ep in empty[2:]:
+                    if ep not in used:
+                        algo=self.police_algos[pi] if pi<len(self.police_algos) else ASTAR
+                        self.police_list.append(Police(ep[0],ep[1],algorithm=algo,index=pi))
+                        used.add(ep); break
+
+        edge = [ep for ep in empty if ep[0] <= 2 or ep[0] >= self.rows-3 or ep[1] <= 2 or ep[1] >= self.cols-3] # Identify edge tiles for potential exit positions, ensuring they are not too close to the center of the grid.
+        self.exit_pos = random.choice(edge) if edge else empty[-1] # Randomly select the exit point.
+        if custom_colls:
+            self.collectibles=dict(custom_colls)
+        else:
+            mult = DIFF_COLLECTIBLE_MULT[self.sel["diff"]]
+            ctypes = [COIN]*(30*mult)+[MONEY]*(15*mult)+[NECKLACE]*(10*mult)+[GEM]*(4*mult)
+            ctypes += [BOOST]*(6 if self.sel["diff"]==EASY else 3)
+            random.shuffle(ctypes); excl = used|{self.exit_pos}; self.collectibles={}
+            for ep in empty:
+                if ep not in excl and ctypes: self.collectibles[ep]=ctypes.pop()
+                if not ctypes: break
+        self.weather_sys = WeatherSystem(self.sel["weather"])  #Weather selection for the game.
+        self.elapsed = 0.0; self.particles=ParticleSystem(); self.state=self.S_PLAYING #set the game state to playing.
