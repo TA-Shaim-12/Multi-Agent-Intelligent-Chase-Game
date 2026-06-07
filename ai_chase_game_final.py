@@ -149,3 +149,59 @@ class Game:
                 if not ctypes: break
         self.weather_sys = WeatherSystem(self.sel["weather"])  #Weather selection for the game.
         self.elapsed = 0.0; self.particles=ParticleSystem(); self.state=self.S_PLAYING #set the game state to playing.
+
+
+    def handle_event(self, event):   # Handle user inpput and help navigate between different game states (menu, editor, analysis, game over, post-game analysis).
+        if self.state==self.S_EDITOR: # if in edditor mode, pass the event to the editor for handling.
+            if event.type==pygame.KEYDOWN and event.key==pygame.K_ESCAPE: self.state=self.S_MENU; return
+            self.editor.handle_event(event); return
+        if self.state==self.S_ANALYSIS:
+            if event.type==pygame.KEYDOWN and event.key==pygame.K_ESCAPE: self.state=self.S_MENU; return
+            return
+        if self.state==self.S_GAMEOVER: # Game-over popup buttons(Play Again, Analysis, Main Menu) handling.
+            if event.type==pygame.KEYDOWN: # keyboard shortcuts keys.
+                if event.key in(pygame.K_SPACE,pygame.K_RETURN): self.start_game(); return
+                if event.key in(pygame.K_m,pygame.K_ESCAPE): self.state=self.S_MENU; return
+                if event.key==pygame.K_TAB: self.state=self.S_POSTGAME; return
+            if event.type==pygame.MOUSEBUTTONDOWN and event.button==1 and self._go_btn_rects:  # Check mouse click on screen.
+                mx,my=event.pos
+                bx,by,bw,bh=self._go_btn_rects[0]
+                if bx<=mx<=bx+bw and by<=my<=by+bh: self.start_game(); return
+                bx,by,bw,bh=self._go_btn_rects[1]
+                if bx<=mx<=bx+bw and by<=my<=by+bh: self.state=self.S_POSTGAME; return
+                bx,by,bw,bh=self._go_btn_rects[2]
+                if bx<=mx<=bx+bw and by<=my<=by+bh: self.state=self.S_MENU; return
+            return
+        
+        if self.state==self.S_POSTGAME:  # Post game analysis screen.
+            if event.type==pygame.KEYDOWN:  
+                if event.key in(pygame.K_SPACE,pygame.K_RETURN): self.start_game(); return
+                if event.key in(pygame.K_m,pygame.K_ESCAPE): self.state=self.S_MENU; return
+                if event.key==pygame.K_TAB: self.state=self.S_ANALYSIS; return
+            return
+        if event.type==pygame.KEYDOWN: # keyboard shortcuts keys.  
+            k=event.key
+            if k==pygame.K_ESCAPE and self.state in(self.S_PLAYING,self.S_PAUSED): self.state=self.S_MENU
+            if k==pygame.K_p:
+                if self.state==self.S_PLAYING: self.state=self.S_PAUSED
+                elif self.state==self.S_PAUSED: self.state=self.S_PLAYING
+            if k==pygame.K_r and self.state in(self.S_PLAYING,self.S_PAUSED): self.start_game()
+            if k==pygame.K_TAB: self.state=self.S_ANALYSIS
+        if event.type==pygame.MOUSEMOTION and self.state==self.S_MENU:  # update hovered menu item based on mouse position.
+            mx,my=event.pos
+            if self._menu_eb: self.hovered=menu_hit(mx,my,self._menu_eb,self._menu_sb,self._menu_lcols,self.sel,self.police_algos)
+        if event.type==pygame.MOUSEBUTTONDOWN and event.button==1 and self.state==self.S_MENU and self._menu_eb:  # handle mouse click on menu items.
+            mx,my=event.pos
+            hit=menu_hit(mx,my,self._menu_eb,self._menu_sb,self._menu_lcols,self.sel,self.police_algos)
+            if hit:
+                cname,idx=hit
+                if cname=="start":    self.start_game()
+                elif cname=="editor": self.state=self.S_EDITOR
+                elif cname=="map":    self.sel["map"]=MAPS[idx]
+                elif cname=="weather":self.sel["weather"]=WEATHERS[idx]
+                elif cname=="dn":     self.sel["dn"]=DAY_NIGHT_MODES[idx]
+                elif cname=="diff":   self.sel["diff"]=DIFFICULTIES[idx]
+                elif cname=="num_police": self.sel["num_police"]=POLICE_COUNT_OPTIONS[idx]
+                elif cname=="palgo":
+                    pi=idx//10; ai=idx%10
+                    if pi<len(self.police_algos) and ai<len(ALGORITHMS): self.police_algos[pi]=ALGORITHMS[ai]
