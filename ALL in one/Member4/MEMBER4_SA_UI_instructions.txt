@@ -1,0 +1,247 @@
+Just simply write 260-271 and 618-926 of the main game code.
+
+================================================================
+AI CHASE GAME — MEMBER 4 INSTRUCTION MANUAL
+Algorithm : Simulated Annealing + UI System
+Your Branch: sa_[your_student_ID]
+================================================================
+
+WHAT YOU HAVE TO DO
+--------------------
+You will be provided with a file called member4_SA_UI_code.py
+This file contains YOUR section of the game code.
+
+Your job is simple:
+  1. Set up Git on your computer
+  2. Create your branch
+  3. Open your code file in VS Code
+  4. Rewrite and improve the code (tasks below)
+  5. Push your code to GitHub
+  6. Open a Pull Request
+
+You only work with the file you were given.
+
+
+STEP 1 — INSTALL WHAT YOU NEED
+--------------------------------
+Make sure you have these installed:
+
+  Python  : https://www.python.org/downloads
+  Git     : https://git-scm.com/downloads
+  VS Code : https://code.visualstudio.com
+
+After installing Python, install pygame:
+  pip install pygame
+
+
+STEP 2 — SET UP GIT
+---------------------
+Open terminal (or Git Bash on Windows) and run:
+
+  git clone https://github.com/TA-Shaim-12/Multi-Agent-Intelligent-Chase-Game
+  cd Multi-Agent-Intelligent-Chase-Game
+  git checkout -b sa_[your_student_ID]
+  git push -u origin sa_[your_student_ID]
+
+Replace [your_student_ID] with your real student ID.
+Example: sa_S12345
+
+
+STEP 3 — OPEN YOUR CODE IN VS CODE
+-------------------------------------
+1. Open VS Code
+2. Open the folder: Multi-Agent-Intelligent-Chase-Game
+3. Copy the file member4_SA_UI_code.py into this folder
+4. Open it in VS Code
+5. Read it fully before making any changes
+
+
+UNDERSTANDING YOUR ALGORITHM
+------------------------------
+Simulated Annealing (SA) works like this:
+  - It starts with a high temperature T = 5.0
+  - At high temperature it sometimes accepts bad moves on purpose
+    (moving away from the goal) to explore the map
+  - Every step the temperature cools down: T = T * 0.98
+  - As temperature drops it becomes more focused on the goal
+  - If it cannot reach the goal in 600 steps it falls back to A*
+
+This is why SA looks erratic at the start but gets smarter over time.
+
+
+STEP 4 — YOUR TASKS
+---------------------
+All changes go into member4_SA_UI_code.py
+
+TASK 1 — Add comments to sa_path function
+  Find the function called sa_path
+  Add a comment above every line inside it explaining what it does
+  Key things to mention in your comments:
+    - T = 5.0 is the starting temperature
+    - T *= 0.98 is the cooling schedule, T gets smaller each step
+    - delta measures if the next move is better or worse
+    - math.exp(delta/T) is the probability of accepting a bad move
+    - When T is near 0 it stops accepting bad moves
+    - The A* fallback runs if SA fails after 600 steps
+
+TASK 2 — Add algorithm tooltips to draw_menu function
+  Find the function called draw_menu
+  Near the top of the function body, add this dictionary:
+
+    ALGO_TIPS = {
+        "BFS":           "Shortest hops, ignores terrain cost",
+        "Dijkstra":      "Cheapest real cost, terrain-aware",
+        "A*":            "Cost plus heuristic, optimal and fast",
+        "Greedy":        "Beelines to goal, not optimal",
+        "Hill Climbing": "Local search, can get stuck",
+        "Sim. Annealing":"Probabilistic, explores diversely",
+        "Adv A*":        "Dijkstra-enriched heuristic, best paths",
+    }
+
+  Then find the return statement at the bottom of draw_menu
+  Add these lines BEFORE the return:
+
+    if isinstance(hovered, tuple) and hovered[0] == "palgo":
+        ai = hovered[1] % 10
+        if ai < len(ALGORITHMS):
+            tip = ALGO_TIPS.get(ALGORITHMS[ai], "")
+            surf.blit(F["sml"].render(tip, True, CYAN),
+                      (SCREEN_W//2 - 200, SCREEN_H - 36))
+
+  What this does: when the user hovers over an algorithm button
+  in the menu, a short description appears at the bottom of the screen.
+
+TASK 3 — Add mini-scoreboard to draw_hud function
+  Find the function called draw_hud
+  Find the bottom bar code near the end of the function
+  Add these lines BEFORE the bottom bar code:
+
+    if t1.score > t2.score:
+        leader = f"P1 leads +{t1.score - t2.score}"
+        lead_col = THIEF_ORA
+    elif t2.score > t1.score:
+        leader = f"P2 leads +{t2.score - t1.score}"
+        lead_col = THIEF2_COL
+    else:
+        leader = "Tied!"
+        lead_col = GOLD
+    surf.blit(F["sml"].render(leader, True, lead_col),
+              (SCREEN_W//2 - 60, SCREEN_H - 24))
+
+  What this does: during gameplay it shows which player is winning
+  and by how many points at the bottom centre of the screen.
+
+TASK 4 — Add MVP officer to draw_game_over function
+  Find the function called draw_game_over
+  Find where the stats rows are displayed (the for loop with lbl and val)
+  After that for loop, add:
+
+    if police_list:
+        mvp = max(police_list, key=lambda p: p.captures)
+        if mvp.captures > 0:
+            bc = POLICE_BADGE_COLS[mvp.index % len(POLICE_BADGE_COLS)]
+            surf.blit(F["med"].render(
+                f"MVP: Officer {mvp.index+1} ({mvp.algorithm})"
+                f" - {mvp.captures} capture(s)", True, bc),
+                (BX + 30, BY + BH - 90))
+
+  What this does: after the game ends it shows which police officer
+  caught the most thieves and which algorithm that officer was using.
+
+TASK 5 — Add save and load to MapEditor class
+  Find the class called MapEditor
+  Add these two methods inside the class after the existing methods:
+
+    def save_map(self, fname="custom_map.json"):
+        import json, pathlib
+        data = {"grid": self.grid,
+                "colls": {str(k): v
+                          for k, v in self.collectibles.items()}}
+        pathlib.Path(fname).write_text(json.dumps(data))
+
+    def load_map(self, fname="custom_map.json"):
+        import json, pathlib
+        p = pathlib.Path(fname)
+        if p.exists():
+            d = json.loads(p.read_text())
+            self.grid = d["grid"]
+            self.collectibles = {eval(k): v
+                                 for k, v in d["colls"].items()}
+
+  What this does: players can now save their custom map to a file
+  and load it back the next time they open the game.
+
+TASK 6 — Write your analysis
+  Create a new file in the same folder called README_member4.md
+  Write 200 words about Simulated Annealing
+  Topics to cover:
+    - What the temperature T controls
+    - What happens as T cools down toward 0
+    - Why SA gives different results each run (it is random)
+    - When and why the A* fallback is needed
+    - Is SA better or worse than Hill Climbing and why
+
+
+STEP 5 — PUSH YOUR CODE TO GITHUB
+------------------------------------
+After each task, save your file and run these commands:
+
+  git add member4_SA_UI_code.py
+  git commit -m "sa: add comments to sa_path"
+  git push
+
+Repeat after every task. You need at least 5 commits total.
+
+Commit message examples:
+  git commit -m "sa: add comments to sa_path with T and cooling"
+  git commit -m "sa: add algorithm tooltips to draw_menu"
+  git commit -m "sa: add mini-scoreboard to draw_hud"
+  git commit -m "sa: add MVP officer line to draw_game_over"
+  git commit -m "sa: add save_map and load_map to MapEditor"
+  git commit -m "sa: write analysis in README_member4.md"
+
+
+STEP 6 — OPEN A PULL REQUEST
+------------------------------
+When all tasks are done:
+  1. Go to: https://github.com/TA-Shaim-12/Multi-Agent-Intelligent-Chase-Game
+  2. Click Pull requests tab
+  3. Click New pull request
+  4. Base: main   Compare: sa_[your_student_ID]
+  5. Click Create pull request
+  6. Title: [Member 4] SA and UI done
+  7. Click Create pull request
+
+STOP. Do NOT click Merge.
+
+
+DO NOT DO THESE THINGS
+------------------------
+- Do not edit the main branch directly
+- Do not click Merge on your Pull Request
+- Do not delete your branch after submitting
+- Do not change the menu button positions or sizes
+
+
+IF YOU GET STUCK
+-----------------
+Git not recognized:
+  Restart your terminal after installing Git
+
+Permission denied when pushing:
+  Accept the GitHub invitation the leader sent to your email
+
+Game crashes when you run it:
+  Read the red error message, it tells you which line is wrong
+  Fix that line and run again
+
+Tooltip not showing:
+  Make sure ALGO_TIPS dictionary is inside draw_menu
+  Make sure the if hovered block is before the return statement
+
+MVP line not showing:
+  Make sure you added the code after the stats for loop
+  Make sure BX and BY variables are already defined above
+
+================================================================
+================================================================
