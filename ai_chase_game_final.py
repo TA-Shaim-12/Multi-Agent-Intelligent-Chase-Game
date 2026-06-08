@@ -205,3 +205,37 @@ class Game:
                 elif cname=="palgo":
                     pi=idx//10; ai=idx%10
                     if pi<len(self.police_algos) and ai<len(ALGORITHMS): self.police_algos[pi]=ALGORITHMS[ai]
+
+
+    def update(self, dt): # Update game state based on current state.
+        if self.state==self.S_GAMEOVER: self.particles.update(dt); return
+        if self.state!=self.S_PLAYING: return # Only update game logic if in playing state.
+        self.elapsed+=dt  
+        keys=pygame.key.get_pressed(); ox,oy=self.ox,self.oy  # Store original offsets for calculating movement and particle effects.
+        prev1=(self.t1.r,self.t1.c); self.t1.handle_input(keys,self.grid,dt); self.t1.update(dt,ox,oy)
+        prev2=(self.t2.r,self.t2.c); self.t2.handle_input(keys,self.grid,dt); self.t2.update(dt,ox,oy)
+        if(self.t1.r,self.t1.c)!=prev1: self.sfx('step')  # Play step sound effect.
+        if(self.t2.r,self.t2.c)!=prev2: self.sfx('step')
+        vis=self.weather_sys.visibility()
+        for p in self.police_list:  #  Police's state update based on selection.
+            p.update(self.grid,[self.t1,self.t2],dt,vis,self.sel["dn"],self.sel["diff"])
+            p.update_pixel(ox,oy,dt)
+        self.weather_sys.update(dt); self.particles.update(dt)
+        for thief in[self.t1,self.t2]:  # Add effects and sound when a thief collects an item.
+            pos=(thief.r,thief.c) 
+            if pos in self.collectibles and thief.alive and not thief.escaped:
+                ct=self.collectibles.pop(pos)
+                if ct==BOOST: thief.apply_boost(); self.sfx('boost'); self.particles.emit(thief.px+ox+TILE//2,thief.py+oy+TILE//2,BOOST_COL,12,3)
+                else:
+                    thief.score+=COLLECTIBLE_VALUES[ct]
+                    self.particles.emit(thief.px+ox+TILE//2,thief.py+oy+TILE//2,COLLECTIBLE_COLS[ct],10,3)
+                    self.sfx('gem' if ct==GEM else 'collect')
+        for thief in[self.t1,self.t2]:  # Check if the thief reaches the exit or gets caught by the police.
+            if(thief.r,thief.c)==self.exit_pos and thief.alive and not thief.escaped:
+                thief.escaped=True; self.particles.emit(thief.px+ox+TILE//2,thief.py+oy+TILE//2,GREEN,30,5); self.sfx('escape')
+        for p in self.police_list:  # Check if any police catches a theif.
+            for thief in[self.t1,self.t2]:
+                if(p.r,p.c)==(thief.r,thief.c) and thief.alive and not thief.escaped:
+                    thief.alive=False; p.captures+=1
+                    self.particles.emit(p.px+TILE//2,p.py+TILE//2,RED,25,4); self.sfx('caught')
+        if all((not th.alive or th.escaped) for th in[self.t1,self.t2]): self.state=self.S_GAMEOVER
