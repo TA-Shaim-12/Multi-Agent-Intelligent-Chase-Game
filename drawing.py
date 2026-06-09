@@ -65,11 +65,30 @@ def draw_tile(surf,grid,variants,r,c,ox,oy):
         pygame.draw.circle(
             surf,
             dark,
-            (x+(c*17+i*11+v*5)%TILE,y+(r*13+i*7+v*3)%TILE),
-            2
+            (x+(c*17+i*11+v*5)%TILE,y+(r*13+i*7+v*3)%TILE), 2
         )
 
     if t==EMPTY:  # stop drawing if tile is empty
         return
 
     cx2,cy2=x+TILE//2,y+TILE//2 # center point of tile (used for placing objects)
+
+    if t==BUSH: #drawing bush
+        for dx2,dy2,r2,col in[
+            (-6,4,10,BUSH_DARK),(6,4,10,BUSH_DARK), # darker circles for shadow effect
+            (0,-2,12,BUSH_MID),(-8,0,9,BUSH_MID),(8,0,9,BUSH_MID), # main bush body
+            (0,-6,8,BUSH_LITE),(-4,-4,6,BUSH_LITE),(4,-4,6,BUSH_LITE) # lighter circles to create highlights
+        ]: # drawing multiple circles to form a bush where each tuple contains (x offset, y offset, radius, color)
+            pygame.draw.circle(surf,col,(cx2+dx2,cy2+dy2),r2)
+
+    elif t==STONE: #drawing stone
+        c1=(100+v*8,100+v*5,95+v*6) # base stone shape (two overlapping ellipses c1,c2)
+        c2=(140+v*6,138+v*5,130+v*4) # 'v' changes the colors slightly so every stone looks different
+
+        pygame.draw.ellipse(surf,c1,(x+4,y+6,TILE-8,TILE-10)) # drawing the larger base ellipse 
+        pygame.draw.ellipse(surf,c2,(x+8,y+8,TILE-16,TILE-16)) # drawing a smaller lighter ellipse to make the stone look 3D
+
+        if v % 2 == 0: # small crack line for variation
+            pygame.draw.line(surf,(70,68,65),(cx2-5,cy2-3),(cx2+3,cy2+5),1)
+
+        pygame.draw.line(surf,(80,80,75),(cx2-6,cy2-2),(cx2+4,cy2+4),2) # drawing main shadow line to create depth
