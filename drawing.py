@@ -44,3 +44,32 @@ def _soil(v,r,c): #soil colour generator where v=variation val, r= row, c=col,cr
     #one soil colour is chosen from list based on row, col, variation val.
     #diff pos has diff shade 
     
+def _soil(v,r,c): # soil color generator (it creates variation so that the ground doesn't look repetitive)
+    return [SOIL_DARK,SOIL_MID,SOIL_LIGHT,SOIL_MID][((r*7+c*13+v)%4)]
+
+
+def draw_tile(surf,grid,variants,r,c,ox,oy):
+
+    x=ox+c*TILE  # converting grid position into screen position
+    y=oy+r*TILE
+
+    t=grid[r][c] # getting tile type and variation value
+    v=variants[r][c]
+
+    
+    base=_soil(v,r,c) # drawing soil color
+    pygame.draw.rect(surf,base,(x,y,TILE,TILE))
+
+    for i in range(3): # adding small dots for soil texture
+        dark=tuple(max(0,base[j]-20) for j in range(3))
+        pygame.draw.circle(
+            surf,
+            dark,
+            (x+(c*17+i*11+v*5)%TILE,y+(r*13+i*7+v*3)%TILE),
+            2
+        )
+
+    if t==EMPTY:  # stop drawing if tile is empty
+        return
+
+    cx2,cy2=x+TILE//2,y+TILE//2 # center point of tile (used for placing objects)
