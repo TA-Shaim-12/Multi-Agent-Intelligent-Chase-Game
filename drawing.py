@@ -36,3 +36,11 @@ def draw_sky(surf,weather,night=False): #SKY
             rx=int((SCREEN_W-80)+44*math.cos(math.radians(a)))
             ry=int(60+44*math.sin(math.radians(a)))
             pygame.draw.line(surf,SUN_COL,(SCREEN_W-80,60),(rx,ry),2)
+
+
+def _soil(v,r,c): #soil colour generator where v=variation val, r= row, c=col,creates colour variation
+
+    return [SOIL_DARK,SOIL_MID,SOIL_LIGHT,SOIL_MID][((r*7+c*13+v)%4)] 
+    #one soil colour is chosen from list based on row, col, variation val.
+    #diff pos has diff shade 
+    
