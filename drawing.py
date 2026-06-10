@@ -162,4 +162,20 @@ def draw_collectible(surf,ctype,x,y,t): #drawing collectoibles(gem, money coin e
         fs=pygame.font.SysFont("Arial",9,bold=True) #small font for dollar sign
         surf.blit(fs.render("$",True,(20,150,50)),(cx2-4,cy2-5+bob)) #drawing '$' sign in the center
 
-   
+    elif ctype==GEM: #drawing gem
+        pts=[(cx2,cy2-11+bob),(cx2+7,cy2-3+bob),(cx2+5,cy2+7+bob), 
+             (cx2-5,cy2+7+bob),(cx2-7,cy2-3+bob)] # points used to create a gem shape
+        pygame.draw.polygon(surf,col,pts) # drawing filled polygon for gem body
+        pygame.draw.polygon(surf,WHITE,pts,1) #drawing white line to make the edge look clearer
+        pygame.draw.line(surf,WHITE,(cx2,cy2-11+bob),(cx2,cy2+7+bob),1) #drawing center highlight line for crystal effect
+
+    elif ctype==BOOST: #drawing boost 
+        glow=abs(math.sin(t*4))*0.5+0.5 #drawing glow animation that changes brightness over time, giving boost item energy effect
+        c2=tuple(int(BOOST_COL[i]*glow) for i in range(3)) # adjusting boost color brightness dynamically
+
+        pts=[(cx2,cy2-11+bob),(cx2+5,cy2-2+bob),(cx2+1,cy2-2+bob),
+             (cx2+6,cy2+9+bob),(cx2-1,cy2+1+bob),(cx2+3,cy2+1+bob)] # drawing lightning bolt style points for boost icon
+
+        pygame.draw.polygon(surf,c2,pts) #drawing glowing lightning bolt for boost 
+        pygame.draw.polygon(surf,WHITE,pts,1) #drawing white border for visibility
+
