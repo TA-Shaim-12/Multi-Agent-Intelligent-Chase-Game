@@ -92,3 +92,44 @@ def draw_tile(surf,grid,variants,r,c,ox,oy):
             pygame.draw.line(surf,(70,68,65),(cx2-5,cy2-3),(cx2+3,cy2+5),1)
 
         pygame.draw.line(surf,(80,80,75),(cx2-6,cy2-2),(cx2+4,cy2+4),2) # drawing main shadow line to create depth
+
+
+    elif t==MUD: #drawing mud
+        pygame.draw.rect(surf,MUD_COL,(x+2,y+2,TILE-4,TILE-4)) # drawing muddy ground using dark brown rectangle
+
+        for i in range(4): # adding random mud spots to give surface texture
+            pygame.draw.ellipse(
+                surf,
+                (60,40,20), # modulus is used so the spots stay inside the tile
+                (x+5+(c*11+i*9)%(TILE-10), # x position of mud spot 
+                 y+5+(r*7+i*11)%(TILE-10), # y position of mud spot
+                 6,4) #width and height of mud spot 
+            )
+
+
+    elif t==TREE: #drawing tree
+        pygame.draw.rect(surf,(80,50,20),(cx2-3,cy2,6,14)) # drawing tree trunk
+
+        pygame.draw.ellipse(surf,(50,40,25),(cx2-8,cy2+12,16,6)) # drawing shadow under trunk to give grounded effect
+
+        for dx2,dy2,r2,col in[ # drawing multiple circles for tree leaves (x offset, y offset, radius, color)
+            (0,-4,14,(20,90,15)), # main leaves (dark green)
+            (-5,-2,10,(30,110,20)), # left side leaves (medium green)
+            (4,-6,9,(50,140,35)), # right side leaves (bright green)
+            (0,-10,7,(70,160,55)) # top leaves (light green)
+        ]:
+            pygame.draw.circle(surf,col,(cx2+dx2,cy2+dy2),r2) # drawing each leaf circle for tree center
+
+    elif t==WALL: #drawing wall
+        pygame.draw.rect(surf,(80,75,70),(x+1,y+1,TILE-2,TILE-2)) # drawing outer wall block slightly padded for visibility
+
+        # Brick pattern inside wall
+        for brow in range(2):  # creating brick pattern inside the wall where the wall is divided into rows and columns of bricks (iterates through brick rows)
+            for bcol in range(2+brow%2): # alternates num of bricks each row to create staggered brick wall effect
+                bx2=x+1+bcol*((TILE-2)//(2+brow%2)) # calculates brick position
+                by2=y+1+brow*((TILE-2)//2) 
+                bw2=(TILE-2)//(2+brow%2)-2 # calculates brick sixe
+                bh2=(TILE-2)//2-2
+
+                pygame.draw.rect(surf,(100,95,90),(bx2,by2,bw2,bh2)) # drawing brick body
+                pygame.draw.rect(surf,(65,60,55),(bx2,by2,bw2,bh2),1) # drawing darker outline around each brick so they are noticable
