@@ -179,3 +179,16 @@ def draw_collectible(surf,ctype,x,y,t): #drawing collectoibles(gem, money coin e
         pygame.draw.polygon(surf,c2,pts) #drawing glowing lightning bolt for boost 
         pygame.draw.polygon(surf,WHITE,pts,1) #drawing white border for visibility
 
+def draw_exit(surf,x,y,t): #drawing exit
+
+    glow=abs(math.sin(t*2))*80 #pulsing glow effect
+    col=(50,int(200+glow/2),int(100+glow/2))  #changes green/blue intensity based on glow, so exit becomes brighter and darker
+
+    pygame.draw.rect(surf,col,(x+2,y+2,TILE-4,TILE-4),border_radius=6) #drawing main exit tile with rounded corners with small padding inside
+    pygame.draw.rect(surf,WHITE,(x+2,y+2,TILE-4,TILE-4),2,border_radius=6) #drawing white border around exit tile for visibility
+
+    fs=pygame.font.SysFont("Arial",11,bold=True) # creating small bold font
+    txt=fs.render("EXIT",True,WHITE)  #writes "EXIT" in white
+
+    surf.blit(txt,(x+TILE//2-txt.get_width()//2,
+                   y+TILE//2-txt.get_height()//2)) # drawing EXIT text at the center of the tile by adjusting height and width based on text size
