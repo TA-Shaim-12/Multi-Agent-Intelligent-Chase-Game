@@ -133,3 +133,33 @@ def draw_tile(surf,grid,variants,r,c,ox,oy):
 
                 pygame.draw.rect(surf,(100,95,90),(bx2,by2,bw2,bh2)) # drawing brick body
                 pygame.draw.rect(surf,(65,60,55),(bx2,by2,bw2,bh2),1) # drawing darker outline around each brick so they are noticable
+
+def draw_collectible(surf,ctype,x,y,t): #drawing collectoibles(gem, money coin etc)
+
+    cx2,cy2=x+TILE//2,y+TILE//2 # finding center position of the tile
+    bob=int(4*math.sin(t*3)) # creating a bobbing animation
+    col=COLLECTIBLE_COLS[ctype] # getting color assigned for the collectible type
+
+    if ctype==COIN: #drawing coin
+        pygame.draw.circle(surf,col,(cx2,cy2+bob),9) #drawing main coin circle (gold)
+        pygame.draw.circle(surf,WHITE,(cx2-3,cy2-3+bob),3) #drawing shine effect for highlighting the coin
+        pygame.draw.circle(surf,(180,140,0),(cx2,cy2+bob),9,2) #drawing outer borderfor depth and visibility
+
+    elif ctype==NECKLACE: #drawing necklace
+        for i in range(8): #drawing small beads using loop to create necklace shape
+            a=i*math.pi/4 #bead placement angle
+            pygame.draw.circle( #drawing individual necklace beads
+                surf,
+                col,
+                (cx2+int(9*math.cos(a)),cy2+int(5*math.sin(a))+bob),
+                3
+            )
+        pygame.draw.circle(surf,(200,180,250),(cx2,cy2+bob),4) #drawing jewwl/gem in the middle
+
+    elif ctype==MONEY: #drawing money 
+        pygame.draw.rect(surf,col,(cx2-9,cy2-6+bob,18,13),border_radius=3) #drawing note body
+        pygame.draw.rect(surf,(20,150,50),(cx2-9,cy2-6+bob,18,13),2,border_radius=3) #drawing border around note for visibility
+        fs=pygame.font.SysFont("Arial",9,bold=True) #small font for dollar sign
+        surf.blit(fs.render("$",True,(20,150,50)),(cx2-4,cy2-5+bob)) #drawing '$' sign in the center
+
+   
