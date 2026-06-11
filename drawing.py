@@ -244,7 +244,7 @@ def draw_character(surf,x,y,is_police,direction,anim_frame,captured=False,body_c
         border_radius=4
     )
 
-    pygame.draw.circle( #draing badge in the middle of the body
+    pygame.draw.circle( #drawing badge in the middle of the body
         surf,
         badge_col,
         (cx2,cy2+3),
@@ -350,3 +350,21 @@ def draw_character(surf,x,y,is_police,direction,anim_frame,captured=False,body_c
 
     pygame.draw.circle(surf,WHITE,(cx2+ex+3,cy2-16),1) #drawing small white circle for shine effect on right eye
 
+
+    if captured: #drawing capture effect, when character is captured draw a red X over character
+
+        pygame.draw.line( #drawing first diagonal line of X
+            surf,
+            RED,
+            (cx2-14,cy2-28),
+            (cx2+14,cy2+22),
+            3
+        )
+
+        pygame.draw.line( #drawing second diagonal line of X
+            surf,
+            RED,
+            (cx2+14,cy2-28),
+            (cx2-14,cy2+22),
+            3
+        )
