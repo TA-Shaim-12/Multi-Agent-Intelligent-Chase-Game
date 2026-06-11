@@ -192,3 +192,47 @@ def draw_exit(surf,x,y,t): #drawing exit
 
     surf.blit(txt,(x+TILE//2-txt.get_width()//2,
                    y+TILE//2-txt.get_height()//2)) # drawing EXIT text at the center of the tile by adjusting height and width based on text size
+                   
+
+def draw_character(surf,x,y,is_police,direction,anim_frame,captured=False,body_col=None,badge_col=None): #drawing character
+
+    if body_col is None: #use blue for police and orange for thief if there's no body color
+        body_col=POLICE_BLUE if is_police else THIEF_ORA
+
+    if badge_col is None: #use gold for police and red for thief if there's no badge color
+        badge_col=GOLD if is_police else (180,30,30)
+
+    skin=(220,175,130) #skin color used for face and hands
+
+    cx2,cy2=x+TILE//2,y+TILE//2 #finding center of the character based on tile position
+
+    ls=int(7*math.sin(anim_frame*math.pi*2)) #creating smooth leg movment
+        #this value continuously changes to simulate walking.
+   
+    pygame.draw.line(  #drawing left leg
+        surf,
+        (50,50,80),
+        (cx2-5,cy2+8),
+        (cx2-5+ls,cy2+20),
+        4
+    )
+
+    pygame.draw.line( #drawing right leg
+        surf,
+        (50,50,80),
+        (cx2+5,cy2+8),
+        (cx2+5-ls,cy2+20),
+        4
+    )
+
+    pygame.draw.ellipse( #drawing left foot
+        surf,
+        (30,25,20),
+        (cx2-9+ls,cy2+17,8,5)
+    )
+
+    pygame.draw.ellipse( #drawing right foot
+        surf,
+        (30,25,20),
+        (cx2+1-ls,cy2+17,8,5)
+    )
