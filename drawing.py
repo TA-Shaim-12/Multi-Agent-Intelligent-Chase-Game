@@ -236,3 +236,117 @@ def draw_character(surf,x,y,is_police,direction,anim_frame,captured=False,body_c
         (30,25,20),
         (cx2+1-ls,cy2+17,8,5)
     )
+
+    pygame.draw.rect( #drawing the main body as a rectangle with rounded corners
+        surf,
+        body_col,
+        (cx2-10,cy2-4,20,16),
+        border_radius=4
+    )
+
+    pygame.draw.circle( #draing badge in the middle of the body
+        surf,
+        badge_col,
+        (cx2,cy2+3),
+        4
+    )
+
+    asw=int(5*math.sin(anim_frame*math.pi*2+math.pi)) #animating arm movement
+    #here, arms move opposite to legs and to make it happen, adding 'pi' which shifts the movement direction
+
+    pygame.draw.line( #drawing left arm
+        surf,
+        body_col,
+        (cx2-10,cy2-2),
+        (cx2-16,cy2+8+asw),
+        4
+    )
+
+    pygame.draw.line( #drawing right arm
+        surf,
+        body_col,
+        (cx2+10,cy2-2),
+        (cx2+16,cy2+8-asw),
+        4
+    )
+
+    pygame.draw.circle( #drawing left hand
+        surf,
+        skin,
+        (cx2-16,cy2+8+asw),
+        4
+    )
+
+    pygame.draw.circle( #drawing right hand
+        surf,
+        skin,
+        (cx2+16,cy2+8-asw),
+        4
+    )
+
+    pygame.draw.rect( #drawing neck 
+        surf,
+        skin,
+        (cx2-4,cy2-8,8,8)
+    )
+
+    pygame.draw.circle( #drawing head as a circle
+        surf,
+        skin,
+        (cx2,cy2-14),
+        12
+    )
+
+    # adding accessories based on character type 
+    if is_police: #drawing police cap
+
+        pygame.draw.rect( #drawing bottom of the cap as a rectangle with rounded corners
+            surf,
+            POLICE_BLUE,
+            (cx2-13,cy2-22,26,8),
+            border_radius=3
+        )
+
+        pygame.draw.rect( #drawing top of the cap as a small rectangle with rounded corners
+            surf,
+            (20,40,140),
+            (cx2-10,cy2-26,20,7),
+            border_radius=3
+        )
+
+        pygame.draw.circle( #drawing badge on the cap
+            surf,
+            badge_col,
+            (cx2,cy2-22),
+            3
+        )
+
+    else:
+        hair=(40,30,20) if body_col==THIEF_ORA else (80,10,120) #changing hair color depending on thief type
+
+        pygame.draw.ellipse( #drawing hair 
+            surf,
+            hair,
+            (cx2-11,cy2-26,22,12)
+        )
+
+        band=(180,30,30) if body_col==THIEF_ORA else (120,20,180) #giving different color to headband based on thief type
+
+        pygame.draw.rect( #drawing headband
+            surf,
+            band,
+            (cx2-11,cy2-20,22,5),
+            border_radius=2
+        )
+
+
+    ex=4 if direction==0 else(-4 if direction==1 else 0) #eye direction, 0=right, 1=left, else=forward
+
+    pygame.draw.circle(surf,BLACK,(cx2+ex-3,cy2-16),2) #drawing left eye
+
+    pygame.draw.circle(surf,BLACK,(cx2+ex+3,cy2-16),2) #drawing right eye
+
+    pygame.draw.circle(surf,WHITE,(cx2+ex-3,cy2-16),1) #drawing small white circle for shine effect on left eye
+
+    pygame.draw.circle(surf,WHITE,(cx2+ex+3,cy2-16),1) #drawing small white circle for shine effect on right eye
+
