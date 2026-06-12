@@ -239,3 +239,44 @@ class Game:
                     thief.alive=False; p.captures+=1
                     self.particles.emit(p.px+TILE//2,p.py+TILE//2,RED,25,4); self.sfx('caught')
         if all((not th.alive or th.escaped) for th in[self.t1,self.t2]): self.state=self.S_GAMEOVER
+
+
+    def draw(self):  # Setup drawing surface, game time, and check day/night mode.
+        surf=self.screen; t=self.elapsed; night=(self.sel["dn"]==M_NIGHT)  # Determine if it's night mode for drawing purposes.
+        if self.state==self.S_MENU:  
+            eb,sb,lcols=draw_menu(surf,self.fonts,self.sel,self.hovered,self.police_algos)
+            self._menu_eb=eb; self._menu_sb=sb; self._menu_lcols=lcols; pygame.display.flip(); return
+        if self.state==self.S_EDITOR: self.editor.draw(surf); pygame.display.flip(); return  # Draw map editor screen.
+        if self.state==self.S_ANALYSIS: draw_analysis_screen(surf,self.fonts); pygame.display.flip(); return # Draw algorithm analysis screen.
+        if self.state==self.S_POSTGAME:
+            draw_postgame_analysis(surf,self.fonts,self.police_list,self.elapsed); pygame.display.flip(); return  # Draw post-game statistics screen.
+        draw_sky(surf,self.sel["weather"],night)  # Draw sky based on weather and day/night.
+        if self.grid:
+            for r in range(self.rows):
+                for c in range(self.cols): draw_tile(surf,self.grid,self.variants,r,c,self.ox,self.oy)  # Draw each map tile.
+        if self.exit_pos: draw_exit(surf,self.exit_pos[1]*TILE+self.ox,self.exit_pos[0]*TILE+self.oy,t) # Draw escape/exit location.
+        for(r,c),ct in self.collectibles.items(): draw_collectible(surf,ct,c*TILE+self.ox,r*TILE+self.oy,t)  # Draw all collectibles on map.
+        for p in self.police_list:
+            badge=POLICE_BADGE_COLS[p.index%len(POLICE_BADGE_COLS)]  # Assign unique color per police.
+            for i,(pr,pc) in enumerate(p.path[:6]):  # Show next few path positions.
+                dot=pygame.Surface((8,8),pygame.SRCALPHA)
+                pygame.draw.circle(dot,(*badge,max(0,180-i*30)),(4,4),4)  # Create fading path marker.
+                surf.blit(dot,(pc*TILE+self.ox+TILE//2-4,pr*TILE+self.oy+TILE//2-4))
+        if self.t1: self.t1.draw(surf)  # Draw the thieves on the screen if they exist.
+        if self.t2: self.t2.draw(surf)
+        for p in self.police_list: p.draw(surf)  # Draw the police agents on the screen.
+        self.particles.draw(surf); self.weather_sys.draw_overlay(surf,night)  # Draw weather effects overlay if necessary.
+        if self.state==self.S_PLAYING and self.t1 and self.t2:
+            draw_hud(surf,self.fonts,self.t1,self.t2,self.police_list,
+                     self.sel["weather"],self.elapsed,self.sel["map"],self.sel["dn"],self.sel["diff"])  # Draw the HUD.
+        if self.state==self.S_PAUSED:
+            ov=pygame.Surface((SCREEN_W,SCREEN_H),pygame.SRCALPHA); ov.fill((0,0,0,130)); surf.blit(ov,(0,0))
+            txt=self.fonts['title'].render("PAUSED",True,WHITE); surf.blit(txt,(SCREEN_W//2-txt.get_width()//2,SCREEN_H//2-40))
+            sub=self.fonts['med'].render("P:Resume  R:Restart  ESC:Menu  Tab:Analysis",True,GRAY)
+            surf.blit(sub,(SCREEN_W//2-sub.get_width()//2,SCREEN_H//2+30))
+        if self.state==self.S_GAMEOVER and self.t1 and self.t2:  
+            if random.random()<0.25:
+                self.particles.emit(random.randint(0,SCREEN_W),random.randint(80,400),random.choice([GOLD,GREEN,CYAN,WHITE]),5,2.5)  # Random celebratory particles on game over screen.
+            btn_rects=draw_game_over(surf,self.fonts,self.t1,self.t2,self.police_list,self.elapsed,self.particles) 
+            self._go_btn_rects=btn_rects  
+        pygame.display.flip()  # Update the full display surface to the screen.
