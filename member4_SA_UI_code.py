@@ -17,41 +17,41 @@ def sa_path(grid,start,goal):
 
 
 # --------------------------------Task 2: Algorithm tooltips for draw_menu function--------------------------------------
+def draw_hud(surf,fonts,t1,t2,police_list,weather,elapsed,map_name,dn,diff):
+    F=fonts; pad=10
+    def panel(x,y,w,h):
+        s=pygame.Surface((w,h),pygame.SRCALPHA); s.fill((0,0,0,155)); surf.blit(s,(x,y))
 
-# This dictionary explains each algorithm shortly for the menu tooltip.
-# When the user hovers over an algorithm button, the matching text is shown.
-ALGO_TIPS = {
-    "BFS": "Shortest hops, ignores terrain cost",
-    "Dijkstra": "Cheapest real cost, terrain-aware",
-    "A*": "Cost plus heuristic, optimal and fast",
-    "Greedy": "Beelines to goal, not optimal",
-    "Hill Climbing": "Local search, can get stuck",
-    "Sim. Annealing": "Probabilistic, explores diversely",
-    "Adv A*": "Dijkstra-enriched heuristic, best paths",
-}
+    panel(pad,pad,215,130)
+    surf.blit(F['sml'].render("PLAYER 1",True,THIEF_ORA),(pad+8,pad+3))
+    surf.blit(F['big'].render(f"Score: {t1.score}",True,GOLD),(pad+8,pad+20))
+    st1="ESCAPED" if t1.escaped else("CAUGHT" if not t1.alive else "Active")
+    surf.blit(F['sml'].render(st1,True,GREEN if t1.escaped else(RED if not t1.alive else WHITE)),(pad+8,pad+52))
+    surf.blit(F['sml'].render("WASD / Arrows",True,GRAY),(pad+8,pad+70))
+    if t1.boost_timer>0: surf.blit(F['sml'].render(f"BOOST {t1.boost_timer:.1f}s",True,BOOST_COL),(pad+8,pad+90))
 
+    panel(pad,pad+140,215,120)
+    surf.blit(F['sml'].render("PLAYER 2",True,THIEF2_COL),(pad+8,pad+143))
+    surf.blit(F['big'].render(f"Score: {t2.score}",True,(200,120,255)),(pad+8,pad+161))
+    st2="ESCAPED" if t2.escaped else("CAUGHT" if not t2.alive else "Active")
+    surf.blit(F['sml'].render(st2,True,GREEN if t2.escaped else(RED if not t2.alive else WHITE)),(pad+8,pad+193))
+    surf.blit(F['sml'].render("IJKL / Numpad",True,GRAY),(pad+8,pad+211))
+    if t2.boost_timer>0: surf.blit(F['sml'].render(f"BOOST {t2.boost_timer:.1f}s",True,BOOST_COL),(pad+8,pad+229))
 
-def draw_algorithm_tooltip(surf, F, hovered, ALGORITHMS, CYAN, SCREEN_W, SCREEN_H):
-    # Check whether the hovered item is an algorithm button
-    if isinstance(hovered, tuple) and hovered[0] == "palgo":
-
-        # Extract algorithm index from hovered value
-        ai = hovered[1] % 10
-
-        # Make sure the index is inside the algorithm list
-        if ai < len(ALGORITHMS):
-
-            # Get tooltip text for the selected algorithm
-            tip = ALGO_TIPS.get(ALGORITHMS[ai], "")
-
-            # Draw the tooltip text at the bottom center of the menu screen
-            surf.blit(
-                F["sml"].render(tip, True, CYAN),
-                (SCREEN_W // 2 - 200, SCREEN_H - 36)
-            )
-
-
-
+    ph=22+len(police_list)*20+16
+    panel(SCREEN_W-238,pad,228,ph)
+    mins=int(elapsed)//60; secs=int(elapsed)%60
+    surf.blit(F['big'].render(f"{mins:02d}:{secs:02d}",True,WHITE),(SCREEN_W-233,pad+2))
+    for pi,p in enumerate(police_list):
+        bc=POLICE_BADGE_COLS[p.index%len(POLICE_BADGE_COLS)]
+        surf.blit(F['sml'].render(f"P{pi+1}:{p.algorithm[:8]}  cap:{p.captures}",True,bc),(SCREEN_W-233,pad+38+pi*20))
+    dc={M_DEFAULT:GRAY,M_DAY:YELLOW,M_NIGHT:(100,100,255)}.get(dn,GRAY)
+    surf.blit(F['sml'].render(f"{dn}|{weather}|{diff}",True,dc),(SCREEN_W-233,pad+44+len(police_list)*20))
+    if any(p.is_buffed for p in police_list):
+        bs=pygame.Surface((230,26),pygame.SRCALPHA); bs.fill((180,120,0,210)); surf.blit(bs,(SCREEN_W//2-115,3))
+        surf.blit(F['med'].render("POLICE SPEED BUFF!",True,YELLOW),(SCREEN_W//2-95,5))
+    btm=pygame.Surface((SCREEN_W,24),pygame.SRCALPHA); btm.fill((0,0,0,140)); surf.blit(btm,(0,SCREEN_H-24))
+    surf.blit(F['sml'].render("P1:WASD/Arrows  P2:IJKL/Numpad  P:Pause  R:Restart  ESC:Menu  Tab:Analysis",True,GRAY),(8,SCREEN_H-18))
 
 #--------------------------------------Task 3: Mini scoreboard for HUD------------------------------------------
 
