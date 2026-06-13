@@ -178,7 +178,7 @@ def _nb(grid,pos):
 
 def _cost(grid,pos): return {MUD:3,STONE:2}.get(grid[pos[0]][pos[1]],1)
 def _h(a,b): return abs(a[0]-b[0])+abs(a[1]-b[1])
-
+# Core Logic Execution for Breadth First Search
 def bfs_path(grid,start,goal):
     if start==goal: return [],0
     q=deque([[start]]); vis={start}; expanded=0
