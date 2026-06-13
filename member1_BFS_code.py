@@ -146,6 +146,7 @@ class WeatherSystem:
 # ══════════════════════════════════════════════
 #  MAP GENERATOR
 # ══════════════════════════════════════════════
+# Procedural Layout Grid Generation Block
 def generate_map(name,cols,rows):
     grid=[[EMPTY]*cols for _ in range(rows)]; variants=[[0]*cols for _ in range(rows)]
     random.seed(hash(name)+random.randint(0,9999))
