@@ -135,32 +135,124 @@ class MapEditor:
         surf.blit(F['med'].render("CLEAR",True,WHITE),(SCREEN_W-100,py2+8))
 
 #-----------------------------------Task 4: MVP officer display for game over screen-------------------------------------
+def draw_menu(surf, fonts, sel, hovered, police_algos):
+    """
+    Layout (1380x820):
+    ┌─────────────────────────────────────────────────────────┐
+    │            TITLE  /  SUBTITLE                           │
+    ├──────────┬──────────┬──────────┬──────────┬────────────┤
+    │  MAP     │ WEATHER  │ DAY/NGT  │  DIFF    │ # POLICE   │
+    │ (col 0)  │ (col 1)  │ (col 2)  │ (col 3)  │ (col 4)   │
+    ├──────────┴──────────┴──────────┴──────────┴────────────┤
+    │            ALGORITHM PER OFFICER  (full width)          │
+    │  Officer 1: [BFS][Dijkstra][A*][Greedy][Hill][SA][AdvA*]│
+    │  …up to 5 officers                                      │
+    ├──────────────────────────────────────────────────────────┤
+    │ [EDIT MAP]        [Tab:Analysis hint]       [START GAME] │
+    └─────────────────────────────────────────────────────────┘
+    """
+    F=fonts
+    # Background gradient
+    for y in range(SCREEN_H):
+        t=y/SCREEN_H
+        pygame.draw.line(surf,(int(10+35*t),int(12+30*t),int(55+75*(1-t))),(0,y),(SCREEN_W,y))
 
-def draw_mvp_officer(surf, F, police_list, POLICE_BADGE_COLS, BX, BY, BH):
-    # Check if there is at least one police officer in the game
-    if police_list:
+    # Title
+    title=F['title'].render("AI CHASE",True,GOLD)
+    sub=F['big'].render("Police vs Thief  —  AI Pathfinding Lab",True,(180,200,255))
+    surf.blit(title,(SCREEN_W//2-title.get_width()//2,14))
+    surf.blit(sub,(SCREEN_W//2-sub.get_width()//2,78))
 
-        # Find the officer with the highest number of captures
-        mvp = max(police_list, key=lambda p: p.captures)
+    # ── Top 5-column row: MAP | WEATHER | DAY/NIGHT | DIFFICULTY | NO.POLICE ──
+    # Each column gets equal width across the full screen
+    COL_W   = 230          # width of each option button
+    COL_GAP = (SCREEN_W - 5*COL_W) // 6   # equal gaps between & around cols
+    TOP_Y   = 118          # header label y
+    OPT_Y   = 140          # first option y
+    OPT_H   = 32           # option button height
+    OPT_GAP = 6            # gap between options
 
-        # Show MVP only if the officer has at least one capture
-        if mvp.captures > 0:
+    TOP_COLS = [
+        ("map",        "MAP",         MAPS,              COL_GAP + 0*(COL_W+COL_GAP)),
+        ("weather",    "WEATHER",     WEATHERS,          COL_GAP + 1*(COL_W+COL_GAP)),
+        ("dn",         "DAY / NIGHT", DAY_NIGHT_MODES,   COL_GAP + 2*(COL_W+COL_GAP)),
+        ("diff",       "DIFFICULTY",  DIFFICULTIES,      COL_GAP + 3*(COL_W+COL_GAP)),
+        ("num_police", "NO. OF POLICE", [str(n) for n in POLICE_COUNT_OPTIONS],
+                                                         COL_GAP + 4*(COL_W+COL_GAP)),
+    ]
+    for cname,label,opts,cx in TOP_COLS:
+        # Header
+        htxt=F['med'].render(label,True,CYAN)
+        surf.blit(htxt,(cx,TOP_Y))
+        pygame.draw.line(surf,CYAN,(cx,TOP_Y+20),(cx+COL_W,TOP_Y+20),1)
+        for i,opt in enumerate(opts):
+            # For num_police, compare against int; others compare string
+            if cname=="num_police":
+                sel_b=(sel["num_police"]==POLICE_COUNT_OPTIONS[i])
+            else:
+                sel_b=(sel[cname]==opt)
+            hov=(hovered==(cname,i))
+            ry=OPT_Y+(OPT_H+OPT_GAP)*i
+            bc=(50,80,160) if sel_b else((55,55,85) if hov else(22,26,50))
+            bdc=GOLD if sel_b else(CYAN if hov else(60,70,110))
+            pygame.draw.rect(surf,bc,(cx,ry,COL_W,OPT_H),border_radius=5)
+            pygame.draw.rect(surf,bdc,(cx,ry,COL_W,OPT_H),2,border_radius=5)
+            tc=GOLD if sel_b else(WHITE if hov else GRAY)
+            otxt=F['med'].render(opt,True,tc)
+            surf.blit(otxt,(cx+COL_W//2-otxt.get_width()//2,ry+OPT_H//2-otxt.get_height()//2))
 
-            # Select badge color based on officer index
-            bc = POLICE_BADGE_COLS[mvp.index % len(POLICE_BADGE_COLS)]
+    # ── Algorithm per officer section ─────────────────────────────────────────
+    # Sits below the tallest top column (MAP has 6 items)
+    max_rows = max(len(MAPS), len(WEATHERS), len(DAY_NIGHT_MODES),
+                   len(DIFFICULTIES), len(POLICE_COUNT_OPTIONS))
+    algo_section_y = OPT_Y + max_rows*(OPT_H+OPT_GAP) + 14
 
-            # Prepare MVP message with officer number, algorithm, and captures
-            mvp_text = (
-                f"MVP: Officer {mvp.index + 1} ({mvp.algorithm})"
-                f" - {mvp.captures} capture(s)"
-            )
+    # Section header
+    pygame.draw.line(surf,(60,80,120),(20,algo_section_y-4),(SCREEN_W-20,algo_section_y-4),1)
+    surf.blit(F['med'].render("ALGORITHM PER OFFICER",True,CYAN),(20,algo_section_y))
 
-            # Draw MVP information near the bottom of game over panel
-            surf.blit(
-                F["med"].render(mvp_text, True, bc),
-                (BX + 30, BY + BH - 90)
-            )
+    num = sel["num_police"]
+    # Each algorithm button: fit 7 algos across screen with left label
+    LABEL_W = 82
+    BTN_W   = (SCREEN_W - 40 - LABEL_W - 8) // len(ALGORITHMS)
+    BTN_H   = 28
+    ROW_GAP = 8
+    for pi in range(num):
+        badge = POLICE_BADGE_COLS[pi % len(POLICE_BADGE_COLS)]
+        row_y = algo_section_y + 28 + pi*(BTN_H+ROW_GAP)
+        # Officer label
+        surf.blit(F['sml'].render(f"Officer {pi+1}",True,badge),(20,row_y+6))
+        for ai,algo in enumerate(ALGORITHMS):
+            bx = 20+LABEL_W+4 + ai*BTN_W
+            sel_b=(police_algos[pi]==algo); hov=(hovered==('palgo',pi*10+ai))
+            bc=(50,80,160) if sel_b else((40,45,70) if hov else(22,26,48))
+            bdc=badge if sel_b else(CYAN if hov else(55,65,100))
+            pygame.draw.rect(surf,bc,(bx,row_y,BTN_W-4,BTN_H),border_radius=4)
+            pygame.draw.rect(surf,bdc,(bx,row_y,BTN_W-4,BTN_H),2,border_radius=4)
+            atxt=F['sml'].render(algo,True,badge if sel_b else(WHITE if hov else GRAY))
+            surf.blit(atxt,(bx+(BTN_W-4)//2-atxt.get_width()//2,row_y+BTN_H//2-atxt.get_height()//2))
 
+    # ── Bottom action bar ──────────────────────────────────────────────────────
+    ebx,eby,ebw,ebh=20,SCREEN_H-66,190,46
+    eh=(hovered==('editor',0))
+    pygame.draw.rect(surf,(40,60,120) if eh else(22,38,85),(ebx,eby,ebw,ebh),border_radius=8)
+    pygame.draw.rect(surf,CYAN,(ebx,eby,ebw,ebh),2,border_radius=8)
+    etxt=F['big'].render("EDIT MAP",True,CYAN)
+    surf.blit(etxt,(ebx+ebw//2-etxt.get_width()//2,eby+10))
+
+    sbx,sby,sbw,sbh=SCREEN_W-220,SCREEN_H-66,200,46
+    sh=(hovered==('start',0))
+    pygame.draw.rect(surf,(35,150,70) if sh else(22,105,48),(sbx,sby,sbw,sbh),border_radius=8)
+    pygame.draw.rect(surf,GREEN,(sbx,sby,sbw,sbh),2,border_radius=8)
+    stxt=F['big'].render("START GAME",True,WHITE)
+    surf.blit(stxt,(sbx+sbw//2-stxt.get_width()//2,sby+10))
+
+    hint=F['sml'].render(
+        "Tab: Session Analysis   |   Custom map: use EDIT MAP first, then select Custom",
+        True,(150,170,205))
+    surf.blit(hint,(SCREEN_W//2-hint.get_width()//2,SCREEN_H-14))
+
+  return (ebx,eby,ebw,ebh),(sbx,sby,sbw,sbh),TOP_COLS
 
 # ---------------------------Task 5: Save and load custom map for MapEditor-------------------------------------
 
