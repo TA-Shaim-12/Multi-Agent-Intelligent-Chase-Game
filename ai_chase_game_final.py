@@ -43,10 +43,6 @@ def adv_astar_path(grid,start,goal):
     return [],expanded
 
 
-
-
-
-
 # ══════════════════════════════════════════════
 #  MAIN GAME CLASS
 # ══════════════════════════════════════════════
@@ -289,6 +285,6 @@ class Game:
                 self.handle_event(event)  # Handle keyboard, mouse, and game events
             self.update(dt)   # Update game logic, movement, AI, collisions, etc.
             self.draw()   # Render everything on the screen
-            
+
 if __name__=="__main__":
     Game().run()
