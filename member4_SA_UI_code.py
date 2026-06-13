@@ -255,27 +255,31 @@ def draw_menu(surf, fonts, sel, hovered, police_algos):
   return (ebx,eby,ebw,ebh),(sbx,sby,sbw,sbh),TOP_COLS
 
 # ---------------------------Task 5: Save and load custom map for MapEditor-------------------------------------
+def menu_hit(mx,my,eb,sb,top_cols,sel,police_algos):
+    """Hit-test matches the redesigned draw_menu layout."""
+    ebx,eby,ebw,ebh=eb
+    if ebx<=mx<=ebx+ebw and eby<=my<=eby+ebh: return("editor",0)
+    sbx,sby,sbw,sbh=sb
+    if sbx<=mx<=sbx+sbw and sby<=my<=sby+sbh: return("start",0)
 
-def save_map_editor_data(editor, fname="custom_map.json"):
-    # Import json to convert map data into JSON format
-    import json
+    # Top columns (map/weather/dn/diff/num_police)
+    COL_W=230; COL_GAP=(SCREEN_W-5*COL_W)//6
+    OPT_Y=140; OPT_H=32; OPT_GAP=6
+    for ci,(cname,_,opts,cx) in enumerate(top_cols):
+        for i in range(len(opts)):
+            ry=OPT_Y+i*(OPT_H+OPT_GAP)
+            if cx<=mx<=cx+COL_W and ry<=my<=ry+OPT_H: return(cname,i)
 
-    # Import pathlib to write file easily using Path
-    import pathlib
-
-    # Prepare map data with grid and collectibles
-    # Tuple keys are converted into string because JSON cannot store tuple keys directly
-    data = {
-        "grid": editor.grid,
-        "colls": {
-            str(k): v
-            for k, v in editor.collectibles.items()
-        }
-    }
-
-    # Save the map data into a JSON file
-    pathlib.Path(fname).write_text(json.dumps(data))
-
+    # Algorithm per officer buttons
+    max_rows=max(len(MAPS),len(WEATHERS),len(DAY_NIGHT_MODES),len(DIFFICULTIES),len(POLICE_COUNT_OPTIONS))
+    algo_section_y=OPT_Y+max_rows*(OPT_H+OPT_GAP)+14
+    LABEL_W=82; BTN_W=(SCREEN_W-40-LABEL_W-8)//len(ALGORITHMS); BTN_H=28; ROW_GAP=8
+    num=sel["num_police"]
+    for pi in range(num):
+        for ai in range(len(ALGORITHMS)):
+            bx=20+LABEL_W+4+ai*BTN_W; by=algo_section_y+28+pi*(BTN_H+ROW_GAP)
+            if bx<=mx<=bx+BTN_W-4 and by<=my<=by+BTN_H: return("palgo",pi*10+ai)
+    return None
 
 def load_map_editor_data(editor, fname="custom_map.json"):
     # Import json to read saved JSON map data
