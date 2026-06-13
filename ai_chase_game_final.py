@@ -280,3 +280,12 @@ class Game:
             btn_rects=draw_game_over(surf,self.fonts,self.t1,self.t2,self.police_list,self.elapsed,self.particles) 
             self._go_btn_rects=btn_rects  
         pygame.display.flip()  # Update the full display surface to the screen.
+        
+    def run(self):  # Main game loop.
+        while True:
+            dt=min(self.clock.tick(FPS)/1000.0,0.05) # Calculate frame time (delta time) and cap it to avoid large jumps
+            for event in pygame.event.get(): # Process all user/system events
+                if event.type==pygame.QUIT: pygame.quit(); sys.exit()  # Exit the program completely
+                self.handle_event(event)  # Handle keyboard, mouse, and game events
+            self.update(dt)   # Update game logic, movement, AI, collisions, etc.
+            self.draw()   # Render everything on the screen
