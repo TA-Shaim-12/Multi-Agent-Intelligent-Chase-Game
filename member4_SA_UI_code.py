@@ -281,27 +281,39 @@ def menu_hit(mx,my,eb,sb,top_cols,sel,police_algos):
             if bx<=mx<=bx+BTN_W-4 and by<=my<=by+BTN_H: return("palgo",pi*10+ai)
     return None
 
-def load_map_editor_data(editor, fname="custom_map.json"):
-    # Import json to read saved JSON map data
-    import json
-
-    # Import pathlib to check and read file path
-    import pathlib
-
-    # Create path object for the saved map file
-    p = pathlib.Path(fname)
-
-    # Load map only if the file exists
-    if p.exists():
-
-        # Read JSON data from file
-        d = json.loads(p.read_text())
-
-        # Restore saved grid data
-        editor.grid = d["grid"]
-
-        # Convert string keys back into tuple keys for collectibles
-        editor.collectibles = {
-            eval(k): v
-            for k, v in d["colls"].items()
-        }
+def draw_game_over(surf,fonts,t1,t2,police_list,elapsed,particles):
+    ov=pygame.Surface((SCREEN_W,SCREEN_H),pygame.SRCALPHA); ov.fill((0,0,0,185)); surf.blit(ov,(0,0))
+    particles.draw(surf); F=fonts
+    p1w=t1.escaped; p2w=t2.escaped; p1l=not t1.alive; p2l=not t2.alive
+    if p1w and p2w:     title_txt="BOTH ESCAPED!";      title_col=GREEN
+    elif p1l and p2l:   title_txt="BOTH CAPTURED!";     title_col=RED
+    elif p1w and p2l:   title_txt="PLAYER 1 WINS!";     title_col=THIEF_ORA
+    elif p2w and p1l:   title_txt="PLAYER 2 WINS!";     title_col=THIEF2_COL
+    elif t1.score>t2.score: title_txt="P1 LEADS SCORE!"; title_col=THIEF_ORA
+    elif t2.score>t1.score: title_txt="P2 LEADS SCORE!"; title_col=THIEF2_COL
+    else:               title_txt="IT'S A DRAW!";        title_col=GOLD
+    BW,BH=660,400; BX=SCREEN_W//2-BW//2; BY=SCREEN_H//2-BH//2
+    pygame.draw.rect(surf,(20,20,38),(BX,BY,BW,BH),border_radius=14)
+    pygame.draw.rect(surf,title_col,(BX,BY,BW,BH),3,border_radius=14)
+    ttxt=F['title'].render(title_txt,True,title_col); surf.blit(ttxt,(SCREEN_W//2-ttxt.get_width()//2,BY+14))
+    mins=int(elapsed)//60; secs=int(elapsed)%60
+    total_caps=sum(p.captures for p in police_list)
+    algos_used=", ".join(dict.fromkeys(p.algorithm for p in police_list))
+    for i,(lbl,val,col) in enumerate([
+        ("P1 Score:",str(t1.score),GOLD),("P2 Score:",str(t2.score),(200,120,255)),
+        ("Time:",f"{mins:02d}:{secs:02d}",WHITE),("Officers:",str(len(police_list)),CYAN),
+        ("Algorithms:",algos_used,CYAN),("Total Captures:",str(total_caps),RED),
+        ("Total Nodes:",str(sum(p.nodes_explored for p in police_list)),(180,180,255))]):
+        y=BY+86+i*36
+        surf.blit(F['med'].render(lbl,True,GRAY),(BX+30,y)); surf.blit(F['med'].render(val,True,col),(BX+300,y))
+    btns=[("PLAY AGAIN",GREEN),("SEE ANALYSIS",CYAN),("MAIN MENU",ORANGE)]
+    btn_rects=[]
+    for i,(txt,col) in enumerate(btns):
+        rx=BX+16+i*210; ry=BY+BH-56; rw=198; rh=40
+        pygame.draw.rect(surf,(20,40,20) if i==0 else(20,40,60) if i==1 else(40,20,10),(rx,ry,rw,rh),border_radius=8)
+        pygame.draw.rect(surf,col,(rx,ry,rw,rh),2,border_radius=8)
+        t3=F['med'].render(txt,True,col); surf.blit(t3,(rx+rw//2-t3.get_width()//2,ry+rh//2-t3.get_height()//2))
+        btn_rects.append((rx,ry,rw,rh))
+    for p in police_list:
+        if p.captures>0: ANALYZER.record_capture(p.algorithm)
+    return btn_rects
