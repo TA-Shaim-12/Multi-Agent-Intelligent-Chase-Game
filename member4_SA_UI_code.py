@@ -53,40 +53,86 @@ def draw_hud(surf,fonts,t1,t2,police_list,weather,elapsed,map_name,dn,diff):
     btm=pygame.Surface((SCREEN_W,24),pygame.SRCALPHA); btm.fill((0,0,0,140)); surf.blit(btm,(0,SCREEN_H-24))
     surf.blit(F['sml'].render("P1:WASD/Arrows  P2:IJKL/Numpad  P:Pause  R:Restart  ESC:Menu  Tab:Analysis",True,GRAY),(8,SCREEN_H-18))
 
-#--------------------------------------Task 3: Mini scoreboard for HUD------------------------------------------
+class MapEditor:
+    def __init__(self,fonts):
+        self.EDITOR_COLS=(SCREEN_W-100)//TILE; self.EDITOR_ROWS=(SCREEN_H-100)//TILE
+        self.fonts=fonts; self.grid=[[EMPTY]*self.EDITOR_COLS for _ in range(self.EDITOR_ROWS)]
+        self.collectibles:Dict[Tuple,str]={}
+        for c in range(self.EDITOR_COLS): self.grid[0][c]=WALL; self.grid[self.EDITOR_ROWS-1][c]=WALL
+        for r in range(self.EDITOR_ROWS): self.grid[r][0]=WALL; self.grid[r][self.EDITOR_COLS-1]=WALL
+        self.sel_tile=WALL; self.sel_col="tile"; self.sel_ctype=COIN; self.hovered=None
+        self.OX=20; self.OY=130; self.TS=max(18,(SCREEN_W-60)//(self.EDITOR_COLS+1))
 
-def draw_mini_scoreboard(surf, F, t1, t2, SCREEN_W, SCREEN_H,
-                         THIEF_ORA, THIEF2_COL, GOLD):
-    # Compare Player 1 and Player 2 scores
-    # This section decides who is leading the match
+    def get_grid_and_collectibles(self):
+        rows=self.EDITOR_ROWS; cols=self.EDITOR_COLS
+        grid=[[EMPTY]*cols for _ in range(rows)]
+        for r in range(rows):
+            for c in range(cols): grid[r][c]=self.grid[r][c]
+        for c in range(cols): grid[0][c]=WALL; grid[rows-1][c]=WALL
+        for r in range(rows): grid[r][0]=WALL; grid[r][cols-1]=WALL
+        variants=[[0]*cols for _ in range(rows)]
+        colls={(r2,c2):ct for(r2,c2),ct in self.collectibles.items() if 0<=r2<rows and 0<=c2<cols}
+        return grid,variants,colls
 
-    if t1.score > t2.score:
-        # Player 1 is leading
-        leader = f"P1 leads +{t1.score - t2.score}"
+    def handle_event(self,event):
+        if event.type==pygame.MOUSEBUTTONDOWN:
+            mx,my=event.pos; py2=SCREEN_H-80
+            for i,tp in enumerate(TILE_PALETTE):
+                rx=20+i*52
+                if rx<=mx<=rx+44 and py2<=my<=py2+34: self.sel_tile=tp; self.sel_col="tile"; return
+            for i,ct in enumerate([COIN,NECKLACE,MONEY,GEM,BOOST]):
+                rx=360+i*52
+                if rx<=mx<=rx+44 and py2<=my<=py2+34: self.sel_ctype=ct; self.sel_col="collectible"; return
+            if SCREEN_W-120<=mx<=SCREEN_W-20 and py2<=my<=py2+34: self._clear(); return
+            gc=(mx-self.OX)//self.TS; gr=(my-self.OY)//self.TS
+            if 0<=gr<self.EDITOR_ROWS and 0<=gc<self.EDITOR_COLS:
+                if event.button==1:
+                    if self.sel_col=="tile": self.grid[gr][gc]=self.sel_tile; self.collectibles.pop((gr,gc),None)
+                    elif self.grid[gr][gc]==EMPTY: self.collectibles[(gr,gc)]=self.sel_ctype
+                elif event.button==3: self.grid[gr][gc]=EMPTY; self.collectibles.pop((gr,gc),None)
+        if event.type==pygame.MOUSEMOTION:
+            mx,my=event.pos; gc=(mx-self.OX)//self.TS; gr=(my-self.OY)//self.TS
+            self.hovered=(gr,gc) if 0<=gr<self.EDITOR_ROWS and 0<=gc<self.EDITOR_COLS else None
+            if event.buttons[0] and self.hovered:
+                gr2,gc2=self.hovered
+                if 0<gr2<self.EDITOR_ROWS-1 and 0<gc2<self.EDITOR_COLS-1:
+                    if self.sel_col=="tile": self.grid[gr2][gc2]=self.sel_tile
+                    elif self.grid[gr2][gc2]==EMPTY: self.collectibles[(gr2,gc2)]=self.sel_ctype
 
-        # Use Player 1 thief color for the lead text
-        lead_col = THIEF_ORA
+    def _clear(self):
+        self.collectibles.clear()
+        for r in range(self.EDITOR_ROWS):
+            for c in range(self.EDITOR_COLS):
+                self.grid[r][c]=WALL if(r==0 or r==self.EDITOR_ROWS-1 or c==0 or c==self.EDITOR_COLS-1) else EMPTY
 
-    elif t2.score > t1.score:
-        # Player 2 is leading
-        leader = f"P2 leads +{t2.score - t1.score}"
-
-        # Use Player 2 thief color for the lead text
-        lead_col = THIEF2_COL
-
-    else:
-        # Both players have equal score
-        leader = "Tied!"
-
-        # Use gold color when the game is tied
-        lead_col = GOLD
-
-    # Draw the mini scoreboard at the bottom center of the screen
-    surf.blit(
-        F["sml"].render(leader, True, lead_col),
-        (SCREEN_W // 2 - 60, SCREEN_H - 24)
-    )
-
+    def draw(self,surf):
+        F=self.fonts; surf.fill((15,18,35))
+        surf.blit(F['big'].render("MAP EDITOR — Left:paint  Right:erase  ESC:back",True,CYAN),(20,10))
+        surf.blit(F['sml'].render("Paint tiles and collectibles. Select 'Custom' map then Start.",True,GRAY),(20,44))
+        surf.blit(F['sml'].render("Borders are always walls. Players spawn on empty cells.",True,GRAY),(20,62))
+        for r in range(self.EDITOR_ROWS):
+            for c in range(self.EDITOR_COLS):
+                x=self.OX+c*self.TS; y=self.OY+r*self.TS
+                pygame.draw.rect(surf,TILE_COLORS.get(self.grid[r][c],(60,50,40)),(x,y,self.TS-1,self.TS-1))
+                if(r,c) in self.collectibles:
+                    pygame.draw.circle(surf,COLLECTIBLE_COLS[self.collectibles[(r,c)]],(x+self.TS//2,y+self.TS//2),5)
+                if self.hovered==(r,c): pygame.draw.rect(surf,WHITE,(x,y,self.TS-1,self.TS-1),2)
+        py2=SCREEN_H-80; surf.blit(F['sml'].render("Tiles:",True,GRAY),(20,py2-18))
+        for i,tp in enumerate(TILE_PALETTE):
+            rx=20+i*52; bdr=WHITE if(self.sel_col=="tile" and self.sel_tile==tp) else GRAY
+            pygame.draw.rect(surf,TILE_COLORS[tp],(rx,py2,44,34),border_radius=4)
+            pygame.draw.rect(surf,bdr,(rx,py2,44,34),2,border_radius=4)
+            surf.blit(F['sml'].render(TILE_NAMES[tp][:4],True,WHITE),(rx+2,py2+10))
+        surf.blit(F['sml'].render("Collectibles:",True,GRAY),(360,py2-18))
+        for i,ct in enumerate([COIN,NECKLACE,MONEY,GEM,BOOST]):
+            rx=360+i*52; bdr=WHITE if(self.sel_col=="collectible" and self.sel_ctype==ct) else GRAY
+            pygame.draw.rect(surf,(30,30,50),(rx,py2,44,34),border_radius=4)
+            pygame.draw.rect(surf,bdr,(rx,py2,44,34),2,border_radius=4)
+            pygame.draw.circle(surf,COLLECTIBLE_COLS[ct],(rx+22,py2+17),7)
+            surf.blit(F['sml'].render(ct[:4],True,WHITE),(rx+2,py2+22))
+        pygame.draw.rect(surf,(120,20,20),(SCREEN_W-120,py2,100,34),border_radius=6)
+        pygame.draw.rect(surf,RED,(SCREEN_W-120,py2,100,34),2,border_radius=6)
+        surf.blit(F['med'].render("CLEAR",True,WHITE),(SCREEN_W-100,py2+8))
 
 #-----------------------------------Task 4: MVP officer display for game over screen-------------------------------------
 
