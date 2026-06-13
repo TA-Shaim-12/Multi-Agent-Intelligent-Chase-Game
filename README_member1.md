@@ -24,3 +24,5 @@ Our project simulates a Multi-Agent Chase Game where police officers use search 
 * **No, BFS does not care about terrain cost at all.** In theory and in our implementation, BFS treats the grid as an unweighted graph where every step has a default cost of 1.
 * In my `bfs_path` code, the neighbor function (`_nb`) only checks if a tile is a solid obstacle (like a wall or tree) or a walkable space. If it is walkable, BFS treats it with the exact same priority, whether it is a normal road, mud, or stone.
 
+
+
