@@ -252,7 +252,7 @@ def draw_menu(surf, fonts, sel, hovered, police_algos):
         True,(150,170,205))
     surf.blit(hint,(SCREEN_W//2-hint.get_width()//2,SCREEN_H-14))
 
-  return (ebx,eby,ebw,ebh),(sbx,sby,sbw,sbh),TOP_COLS
+    return (ebx,eby,ebw,ebh),(sbx,sby,sbw,sbh),TOP_COLS
 
 # ---------------------------Task 5: Save and load custom map for MapEditor-------------------------------------
 def menu_hit(mx,my,eb,sb,top_cols,sel,police_algos):
