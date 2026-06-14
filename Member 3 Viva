@@ -1,0 +1,125 @@
+1. Questions : What was your responsibility in the project?
+
+I worked on the AI pathfinding module. My tasks included:
+
+ Understanding and documenting the A* algorithm.
+ Understanding and documenting the "Hill Climbing" algorithm.
+ Adding a "mud penalty" for the thief.
+ Adding  ""stuck detection and replanning "" for police agents.
+ Writing an analysis comparing A* and Hill Climbing.
+
+ 2. A* Algorithm Questions
+
+ Q: What is A* Search?
+
+A* is an informed search algorithm used to find the shortest path between two points. It combines the actual path cost and a heuristic estimate to efficiently reach the goal.
+
+
+ Q: What formula does A* use?
+
+
+f(n)=g(n)+h(n)
+
+Where:
+
+g(n) = actual cost from start node to current node.
+h(n) = estimated cost from current node to goal.
+f(n) = total estimated cost.
+
+
+ Q: What heuristic did you use?
+ 
+Manhattan Distance.
+
+[
+h(n)=|row_1-row_2|+|col_1-col_2|
+]
+
+It works well because movement is only up, down, left, and right.
+
+ Q: Why is A* considered optimal?
+
+Because it considers both:
+
+The distance already traveled.
+The estimated distance remaining.
+
+This allows it to find the shortest path when the heuristic is admissible.
+
+
+Q: Why is A* used for police officers?
+
+Because police need reliable and efficient pathfinding to chase the thief. A* finds optimal routes and avoids unnecessary movement.
+
+Q: What data structures are used in A*?
+
+Priority Queue (Open Set),
+Dictionary for visited nodes,
+ Dictionary for path reconstruction
+ 
+3. Hill Climbing Questions
+
+ Q: What is Hill Climbing?
+
+Hill Climbing is a greedy local search algorithm. It always chooses the neighboring position that appears closest to the goal.
+
+Q: How does Hill Climbing make decisions?
+
+It evaluates immediate neighbors and moves to the one with the lowest heuristic value.
+
+It does not analyze the entire map.
+
+ Q: Why is Hill Climbing faster?
+
+Because it only checks nearby cells and does not maintain large search structures like A*.
+
+Q: What is the biggest weakness of Hill Climbing?
+
+It can get stuck in:
+ Local maxima ,Dead ends, Maze structures
+and may fail to find the goal.
+
+Q: How does your implementation escape being stuck?
+
+When no better neighbor exists, it chooses a random valid neighbor to continue moving.
+
+Q: Is Hill Climbing guaranteed to find the shortest path?
+
+No. It is fast but not optimal.
+
+
+4. Police Stuck Detection Questions
+ 
+ Q: What problem does stuck detection solve?
+
+Sometimes a police officer may stop moving because its path becomes invalid or blocked.
+
+Q: Why clear the path?
+
+Clearing the path forces the AI to run the pathfinding algorithm again and generate a new route.
+
+Q: Why is replanning important?
+
+The environment changes dynamically. Replanning helps police continue chasing effectively.
+
+5. Comparison Questions
+
+ Q: Which algorithm is more reliable?
+
+A* is more reliable because it systematically searches and guarantees optimal paths.
+
+Q: Which algorithm is faster?
+
+Hill Climbing is usually faster because it only checks neighboring cells.
+
+Q: Which gets stuck more often?
+
+Hill Climbing gets stuck more often because it only uses local information.
+
+Q: Why does A* perform better in mazes?
+
+A* explores multiple possibilities and evaluates total path cost. Hill Climbing only follows the locally best choice and can get trapped.
+
+Q: When would you choose Hill Climbing?
+
+When speed is more important than optimality and the environment is simple.
